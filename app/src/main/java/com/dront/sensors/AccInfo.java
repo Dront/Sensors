@@ -4,7 +4,6 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.util.Log;
 
 import java.util.ArrayList;
 
@@ -15,8 +14,6 @@ public class AccInfo implements SensorEventListener {
     private static final int DEFAULT_ARR_SIZE = 500;
     private static final double DEFAULT_FLIGHT_GRAVITY = 5.0;
     private static final double MIN_FLIGHT_TIME = 0.2;
-
-    private  static volatile AccInfo instance;
 
     private SensorManager manager;
     private Sensor sensor;
@@ -30,7 +27,7 @@ public class AccInfo implements SensorEventListener {
     private Double flightGravityMax;
 
     //private because it's a singleton
-    private AccInfo(SensorManager s){
+    public AccInfo(SensorManager s){
         manager = s;
         sensor = manager.getDefaultSensor(Constants.DEFAULT_SENSOR);
         manager.unregisterListener(this);
@@ -103,24 +100,6 @@ public class AccInfo implements SensorEventListener {
             return null;
         }
         return countHeights(intervals);
-    }
-
-    //public methods
-    public static AccInfo getInstance(SensorManager s){
-        if (instance == null ){
-            synchronized (AccInfo.class){
-                if (instance == null){
-                    instance = new AccInfo(s);
-                    Log.d(Constants.LOG_SINGLETON, "create singleton");
-                }
-            }
-        }
-        return instance;
-    }
-
-    public static AccInfo getInstance(){
-        Log.d(Constants.LOG_SINGLETON, "return singleton");
-        return instance;
     }
 
     public void enable() {

@@ -49,7 +49,7 @@ public class MainActivity extends Activity {
             finish();
             return;
         }
-        accInfo = AccInfo.getInstance(mSensorManager);
+        accInfo = new AccInfo(mSensorManager);
 
         h = new Handler();
         r = new Runnable() {
@@ -104,6 +104,10 @@ public class MainActivity extends Activity {
             Toast.makeText(getApplicationContext(), "Record data first.", Toast.LENGTH_SHORT).show();
         } else {
             disableSensor();
+
+            DataTransport transport = DataTransport.getInstance();
+            transport.addAll(accInfo.getData());
+
             Intent intent = new Intent(this, GraphActivity.class);
             startActivity(intent);
         }

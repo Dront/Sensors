@@ -10,32 +10,26 @@ import com.jjoe64.graphview.BarGraphView;
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.GraphViewSeries;
 
-import java.util.ArrayList;
-
 
 public class GraphActivity extends Activity {
 
     public final static int MAX_GRAPH_DATA_SIZE = 200;
-    ArrayList<AccRecord> data;
+    DataTransport data;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_graph);
 
-        Log.d(Constants.LOG_TAG, "Graph activity started");
+        Log.d(Constants.LOG_TAG, "Graph activity onCreate");
 
-        AccInfo accInfo = AccInfo.getInstance();
-        try {
-            data = accInfo.getData();
-        } catch (NullPointerException e){
-            String msg = e.getMessage();
-            Log.d(Constants.LOG_ASYNC, msg);
+        data = DataTransport.getInstance();
+        if (data.size() == 0){
+            String msg = "No data was trasported";
             Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
+            Log.d(Constants.LOG_SINGLETON, msg);
             finish();
         }
-
-
 
         GraphView.GraphViewData[] gvData;
         gvData = getGVData();
@@ -58,6 +52,12 @@ public class GraphActivity extends Activity {
         gv.setBackgroundColor(backgroundColor);
         LinearLayout linLayout = (LinearLayout) findViewById(R.id.linLayout);
         linLayout.addView(gv);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        data.clear();
     }
 
     private GraphView.GraphViewData[] getGVData(){
