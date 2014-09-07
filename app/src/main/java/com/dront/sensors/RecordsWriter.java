@@ -81,7 +81,7 @@ public class RecordsWriter extends AsyncTask<AccRecord, Integer, String> {
                 //dos.writeLong(data[i].time);
                 //dos.writeDouble(data[i].meanVal);
                 dos.writeChars(Long.toString(data[i].getTime()) + " ");
-                dos.writeChars(Double.toString(data[i].getMean()) + "\n");
+                dos.writeChars(Double.toString(data[i].getAbs()) + "\n");
                 publishProgress(i, data.length);
                 if (isCancelled()){
                     dos.flush();

@@ -8,7 +8,6 @@ import java.util.ArrayList;
 
 public class AccInfo {
     //do not ask me why
-    public static final int DEFAULT_BIG_TIC_DELAY = 200;
     private static final int DEFAULT_SENSOR_DELAY = SensorManager.SENSOR_DELAY_FASTEST;
     private static final int DEFAULT_ARR_SIZE = 500;
     private static final double DEFAULT_FLIGHT_GRAVITY = 5.0;
@@ -16,36 +15,28 @@ public class AccInfo {
 
     private  static volatile AccInfo instance;
 
-    private Float curX, curY, curZ;
-    private Float sumX, sumY, sumZ;
-    private Float meanX, meanY, meanZ, meanAbs;
+    private Float curX, curY, curZ, curAbs;
     private ArrayList<AccRecord> data;
-    private Integer counter;
     private Integer delay;
     private boolean enabled;
     private String info;
     private Double resolution;
     private Double flightGravityMax;
-    private Integer bigTickDelay;
 
     //private because it's a singleton
     private AccInfo(Sensor s){
         delay = DEFAULT_SENSOR_DELAY;
-        bigTickDelay = DEFAULT_BIG_TIC_DELAY;
         info = s.toString();
         resolution = (double)s.getResolution();
         flightGravityMax = DEFAULT_FLIGHT_GRAVITY;
         enabled = false;
         zeroValues();
-        meanX = meanY = meanZ = meanAbs = 0.0f;
         data = new ArrayList<AccRecord>(DEFAULT_ARR_SIZE);
     }
 
     //private methods
     private void zeroValues(){
-        sumX = sumY = sumZ = 0.0f;
-        curX = curY = curZ = 0.0f;
-        counter = 0;
+        curX = curY = curZ = curAbs = 0.0f;
     }
 
     private ArrayList<Double> findFlightIntervals(){
@@ -53,7 +44,7 @@ public class AccInfo {
 
         FlightInterval tmpInterval = new FlightInterval();
         for(AccRecord cur: data){
-            if (cur.getMean() > flightGravityMax){
+            if (cur.getAbs() > flightGravityMax){
                 if (tmpInterval.start != 0){
                     double time = ((double)tmpInterval.end - tmpInterval.start) / 1000;
                     if (time > MIN_FLIGHT_TIME){
@@ -128,26 +119,8 @@ public class AccInfo {
         }
 
         float mean = (float) Math.sqrt(curX*curX + curY*curY + curZ*curZ);
+        curAbs = mean;
         data.add(new AccRecord(curX, curY, curZ, mean));
-
-        sumX += curX;
-        sumY += curY;
-        sumZ += curZ;
-        counter++;
-    }
-
-    public void bigTick(){
-        if (counter == 0){
-            return;
-        }
-        meanX = sumX / counter;
-        meanY = sumY / counter;
-        meanZ = sumZ / counter;
-        meanAbs = (float)Math.sqrt(meanX*meanX + meanY*meanY + meanZ*meanZ);
-        counter = 0;
-        sumX = sumY = sumZ = 0.0f;
-        //data.add(new AccRecord(meanX, meanY, meanZ, meanAbs));
-        //zeroValues();
     }
 
     public void enable() {
@@ -166,20 +139,20 @@ public class AccInfo {
     }
 
     //getters
-    public Float getMeanAbs() {
-        return meanAbs;
+    public Float getLastAbs() {
+        return curAbs;
     }
 
-    public Float getMeanX() {
-        return meanX;
+    public Float getLastX() {
+        return curX;
     }
 
-    public Float getMeanY() {
-        return meanY;
+    public Float getLastY() {
+        return curY;
     }
 
-    public Float getMeanZ() {
-        return meanZ;
+    public Float getLastZ() {
+        return curZ;
     }
 
     public Integer getDelay() {
@@ -192,14 +165,6 @@ public class AccInfo {
 
     public Boolean getEnabled() {
         return enabled;
-    }
-
-    public Integer getCounter() {
-        return counter;
-    }
-
-    public Integer getBigTickDelay() {
-        return bigTickDelay;
     }
 
     public ArrayList<AccRecord> getData(){
@@ -215,7 +180,4 @@ public class AccInfo {
         this.delay = delay;
     }
 
-    public void setBigTickDelay(Integer bigTickDelay) {
-        this.bigTickDelay = bigTickDelay;
-    }
 }

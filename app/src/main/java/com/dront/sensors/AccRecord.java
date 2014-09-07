@@ -4,22 +4,23 @@ public class AccRecord {
     private long time;
     private float[] values;
 
-    public AccRecord(float x, float y, float z, float mean, long t){
+    //constructors
+    public AccRecord(float x, float y, float z, float abs, long t){
         time = t;
         values = new float[4];
         values[0] = x;
         values[1] = y;
         values[2] = z;
-        values[3] = mean;
+        values[3] = abs;
     }
 
-    public AccRecord(float x, float y, float z, float mean){
+    public AccRecord(float x, float y, float z, float abs){
         time = System.currentTimeMillis();
         values = new float[4];
         values[0] = x;
         values[1] = y;
         values[2] = z;
-        values[3] = mean;
+        values[3] = abs;
     }
 
     public AccRecord(float[] data, long t){
@@ -41,7 +42,7 @@ public class AccRecord {
         return values[2];
     }
 
-    public float getMean(){
+    public float getAbs(){
         return values[3];
     }
 

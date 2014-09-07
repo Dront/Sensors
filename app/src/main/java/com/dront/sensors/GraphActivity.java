@@ -86,7 +86,7 @@ public class GraphActivity extends Activity {
                 int end = (i + 1) * interval;
                 for (int j = begin; j < end; j++){
                     AccRecord tmp = data.get(j);
-                    sum += tmp.getMean();
+                    sum += tmp.getAbs();
                     counter++;
                 }
                 long time = (data.get(i * interval).getTime() - minTime) / 1000;
@@ -98,7 +98,7 @@ public class GraphActivity extends Activity {
             gvData = new GraphView.GraphViewData[size];
             for (int i = 0; i < size; i++){
                 AccRecord tmp = data.get(i);
-                gvData[i] = new GraphView.GraphViewData((tmp.getTime() - minTime) / 1000, tmp.getMean());
+                gvData[i] = new GraphView.GraphViewData((tmp.getTime() - minTime) / 1000, tmp.getAbs());
             }
         }
         return gvData;

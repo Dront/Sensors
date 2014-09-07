@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -25,8 +24,8 @@ import util.ArrayOperation;
 
 public class MainActivity extends Activity implements SensorEventListener {
 
-    private final static String BIG_TICK_PREF = "big tick";
     private final static int DEFAULT_SENSOR = Sensor.TYPE_ACCELEROMETER;
+    public static final int DEFAULT_UI_UPDATE_DELAY = 100;
 
     //some fields
     private TextView txtViewXAxisVal, txtViewYAxisVal, txtViewZAxisVal, txtViewAbsVal;
@@ -63,20 +62,16 @@ public class MainActivity extends Activity implements SensorEventListener {
         accInfo = AccInfo.getInstance(accSensor);
         mSensorManager.unregisterListener(this);
 
-        loadSettings();
-
         r = new Runnable() {
             @Override
             public void run() {
-                accInfo.bigTick();
-
                 DecimalFormat df = new DecimalFormat("#.##");
-                txtViewAbsVal.setText(df.format(accInfo.getMeanAbs()));
-                txtViewXAxisVal.setText(df.format(accInfo.getMeanX()));
-                txtViewYAxisVal.setText(df.format(accInfo.getMeanY()));
-                txtViewZAxisVal.setText(df.format(accInfo.getMeanZ()));
+                txtViewAbsVal.setText(df.format(accInfo.getLastAbs()));
+                txtViewXAxisVal.setText(df.format(accInfo.getLastX()));
+                txtViewYAxisVal.setText(df.format(accInfo.getLastY()));
+                txtViewZAxisVal.setText(df.format(accInfo.getLastZ()));
 
-                h.postDelayed(this, accInfo.getBigTickDelay());
+                h.postDelayed(this, DEFAULT_UI_UPDATE_DELAY);
             }
         };
     }
@@ -93,7 +88,6 @@ public class MainActivity extends Activity implements SensorEventListener {
         //guess
         super.onPause();
         Log.d(Constants.LOG_TAG, "MainActivity onPause");
-        saveSettings();
         disableSensor();
     }
 
@@ -202,7 +196,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         btnStartStop.setText(R.string.btnPause);
         accInfo.enable();
         mSensorManager.registerListener(this, accSensor, accInfo.getDelay());
-        h.postDelayed(r, accInfo.getBigTickDelay());
+        h.postDelayed(r, DEFAULT_UI_UPDATE_DELAY);
     }
 
     private void getInterfaceResources(){
@@ -215,23 +209,6 @@ public class MainActivity extends Activity implements SensorEventListener {
         txtViewFlightHeight = (TextView) findViewById(R.id.txtViewFlightHeightVal);
 
         btnStartStop = (Button) findViewById(R.id.btnStartStop);
-    }
-
-    private void loadSettings(){
-        Context context = getApplicationContext();
-        String filename = getString(R.string.settingsPref);
-        SharedPreferences settings = context.getSharedPreferences(filename, Context.MODE_PRIVATE);
-        int bigTickTime = settings.getInt(BIG_TICK_PREF, AccInfo.DEFAULT_BIG_TIC_DELAY);
-        accInfo.setBigTickDelay(bigTickTime);
-    }
-
-    private void saveSettings(){
-        Context context = getApplicationContext();
-        String filename = getString(R.string.settingsPref);
-        SharedPreferences settings = context.getSharedPreferences(filename, Context.MODE_PRIVATE);
-        SharedPreferences.Editor optionsEditor = settings.edit();
-        optionsEditor.putInt(BIG_TICK_PREF, accInfo.getBigTickDelay());
-        optionsEditor.apply();
     }
 
 }
