@@ -1,19 +1,25 @@
 package com.dront.sensors;
 
 import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.util.Log;
 
 import java.util.ArrayList;
 
-public class AccInfo {
-    //do not ask me why
+public class AccInfo implements SensorEventListener {
+
+
     private static final int DEFAULT_SENSOR_DELAY = SensorManager.SENSOR_DELAY_FASTEST;
     private static final int DEFAULT_ARR_SIZE = 500;
     private static final double DEFAULT_FLIGHT_GRAVITY = 5.0;
     private static final double MIN_FLIGHT_TIME = 0.2;
 
     private  static volatile AccInfo instance;
+
+    private SensorManager manager;
+    private Sensor sensor;
 
     private AccRecord curRecord;
     private ArrayList<AccRecord> data;
@@ -24,10 +30,13 @@ public class AccInfo {
     private Double flightGravityMax;
 
     //private because it's a singleton
-    private AccInfo(Sensor s){
+    private AccInfo(SensorManager s){
+        manager = s;
+        sensor = manager.getDefaultSensor(Constants.DEFAULT_SENSOR);
+        manager.unregisterListener(this);
         delay = DEFAULT_SENSOR_DELAY;
-        info = s.toString();
-        resolution = (double)s.getResolution();
+        info = sensor.toString();
+        resolution = (double)sensor.getResolution();
         flightGravityMax = DEFAULT_FLIGHT_GRAVITY;
         enabled = false;
         curRecord = new AccRecord();
@@ -77,6 +86,16 @@ public class AccInfo {
         return res;
     }
 
+    private void smallTick(float[] newVal){
+        if (data.size() != 0){
+            MovingFilter accFilter = new MovingFilter(MovingFilter.FilterType.LOW_PASS_MOD_1);
+            curRecord = accFilter.filter(curRecord, new AccRecord(newVal));
+        } else {
+            curRecord = new AccRecord(newVal);
+        }
+        data.add(curRecord);
+    }
+
     public double[] getFlights(){
         ArrayList<Double> intervals = findFlightIntervals();
 
@@ -87,7 +106,7 @@ public class AccInfo {
     }
 
     //public methods
-    public static AccInfo getInstance(Sensor s){
+    public static AccInfo getInstance(SensorManager s){
         if (instance == null ){
             synchronized (AccInfo.class){
                 if (instance == null){
@@ -104,25 +123,16 @@ public class AccInfo {
         return instance;
     }
 
-    public void smallTick(float[] newVal){
-        if (data.size() != 0){
-            MovingFilter accFilter = new MovingFilter(MovingFilter.FilterType.LOW_PASS_MOD_1);
-            curRecord = accFilter.filter(curRecord, new AccRecord(newVal));
-        } else {
-            curRecord = new AccRecord(newVal);
-        }
-
-        data.add(curRecord);
-    }
-
     public void enable() {
         zeroValues();
         data.clear();
+        manager.registerListener(this, sensor, delay);
         this.enabled = true;
     }
 
     public void disable(){
         data.trimToSize();
+        manager.unregisterListener(this);
         this.enabled = false;
     }
 
@@ -172,4 +182,13 @@ public class AccInfo {
         this.delay = delay;
     }
 
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        smallTick(event.values);
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int i) {
+
+    }
 }

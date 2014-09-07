@@ -4,9 +4,6 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -22,9 +19,8 @@ import java.util.ArrayList;
 import util.ArrayOperation;
 
 
-public class MainActivity extends Activity implements SensorEventListener {
+public class MainActivity extends Activity {
 
-    private final static int DEFAULT_SENSOR = Sensor.TYPE_ACCELEROMETER;
     public static final int DEFAULT_UI_UPDATE_DELAY = 100;
 
     //some fields
@@ -32,8 +28,6 @@ public class MainActivity extends Activity implements SensorEventListener {
     private TextView txtViewFlightCount, txtViewFlightHeight;
     private Button btnStartStop;
 
-    private SensorManager mSensorManager;
-    private Sensor accSensor;
     private AccInfo accInfo;
     private RecordsWriter recordsWriter;
 
@@ -44,24 +38,20 @@ public class MainActivity extends Activity implements SensorEventListener {
     protected void onCreate(Bundle savedInstanceState) {
         //magic of the Creation
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
         Log.d(Constants.LOG_TAG, "MainActivity onCreate");
 
-        setContentView(R.layout.activity_main);
         getInterfaceResources();
 
-        h = new Handler();
-
-        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        if (mSensorManager.getDefaultSensor(DEFAULT_SENSOR) == null){
+        SensorManager mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        if (mSensorManager.getDefaultSensor(Constants.DEFAULT_SENSOR) == null){
             finish();
             return;
         }
+        accInfo = AccInfo.getInstance(mSensorManager);
 
-        accSensor = mSensorManager.getDefaultSensor(DEFAULT_SENSOR);
-        accInfo = AccInfo.getInstance(accSensor);
-        mSensorManager.unregisterListener(this);
-
+        h = new Handler();
         r = new Runnable() {
             @Override
             public void run() {
@@ -99,16 +89,6 @@ public class MainActivity extends Activity implements SensorEventListener {
         }
     }
 
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int i) {
-        //stuff
-    }
-
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        accInfo.smallTick(event.values);
-    }
-
     public void btnStartStop(View v){
         //btnStartStop onClick
         if (!accInfo.getEnabled()){
@@ -124,8 +104,6 @@ public class MainActivity extends Activity implements SensorEventListener {
             Toast.makeText(getApplicationContext(), "Record data first.", Toast.LENGTH_SHORT).show();
         } else {
             disableSensor();
-            //StorageUser.writeRecordList(accInfo.getData());
-
             Intent intent = new Intent(this, GraphActivity.class);
             startActivity(intent);
         }
@@ -188,14 +166,12 @@ public class MainActivity extends Activity implements SensorEventListener {
     private void disableSensor(){
         btnStartStop.setText(R.string.btnStart);
         accInfo.disable();
-        mSensorManager.unregisterListener(this);
         h.removeCallbacks(r);
     }
 
     private void enableSensor(){
         btnStartStop.setText(R.string.btnPause);
         accInfo.enable();
-        mSensorManager.registerListener(this, accSensor, accInfo.getDelay());
         h.postDelayed(r, DEFAULT_UI_UPDATE_DELAY);
     }
 

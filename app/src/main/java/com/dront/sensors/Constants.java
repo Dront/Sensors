@@ -1,5 +1,7 @@
 package com.dront.sensors;
 
+import android.hardware.Sensor;
+
 public final class Constants {
 
     private Constants(){
@@ -10,4 +12,6 @@ public final class Constants {
     public static final String LOG_ASYNC = LOG_TAG + ".async";
     public final static String LOG_SINGLETON = LOG_TAG + ".singleton";
     public final static String LOG_FLIGHT = LOG_TAG + ".flight";
+
+    public final static int DEFAULT_SENSOR = Sensor.TYPE_ACCELEROMETER;
 }

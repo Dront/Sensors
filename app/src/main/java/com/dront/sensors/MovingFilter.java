@@ -1,6 +1,7 @@
 package com.dront.sensors;
 
 public class MovingFilter {
+    //do not ask me why
     private static final float FILTER_ALPHA = 0.90f;
     private static final float FILTER_DELTA_HIGH = 4.0f;
     private static final float FILTER_DELTA_LOW = 1.0f;
