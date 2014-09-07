@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Sensors</string>
+
+
+    <string name="accelerometer">Accelerometer: </string>
+    <string name="xAxis">X axis: </string>
+    <string name="yAxis">Y axis: </string>
+    <string name="zAxis">Z axis: </string>
+    <string name="absVal">Absolute: </string>
+    <string name="meanVal">Mean value: </string>
+    <string name="sensCounter">Counter: </string>
+
+    <string name="title_activity_graph">Graphics</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="btnPause">Pause!</string>
+    <string name="btnStart">Start!</string>
+    <string name="btnDrawGraph">Draw graph!</string>
+    <string name="btnSave">Save recording!</string>
+    <string name="btnShowInfo">Show info!</string>
+
+    <string name="flightCount">Flight count: </string>
+    <string name="flightHeight">Flight height: </string>
+
+    <string name="records">Records</string>
+    <string name="bigTick">Averaging int.: </string>
+
+    <string name="testNum">12345</string>
+    <string name="testText">Lorem Ipsum</string>
+
+    <string name="settingsPref">com.dront.sensors.options</string>
+
+</resources>

@@ -1,0 +1,238 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="@color/green"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    tools:context=".MainActivity"
+    android:keepScreenOn="true" >
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/infoLayout"
+        android:background="@color/blue"
+        android:layout_marginBottom="@dimen/std_padding"
+        android:padding="@dimen/std_padding">
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/txtViewAcc"
+            android:text="@string/accelerometer"
+            style="@style/std_text"
+            android:gravity="center"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/txtViewX"
+            android:layout_below="@+id/txtViewAcc"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:text="@string/xAxis"
+            style="@style/std_text" />
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/txtViewXVal"
+            android:layout_below="@+id/txtViewAcc"
+            android:layout_toRightOf="@+id/txtViewX"
+            android:layout_toEndOf="@id/txtViewX"
+            android:text="@string/testNum"
+            style="@style/std_text"
+            android:gravity="end"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/txtViewY"
+            android:layout_below="@+id/txtViewX"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:text="@string/yAxis"
+            style="@style/std_text"/>
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/txtViewYVal"
+            android:layout_below="@+id/txtViewX"
+            android:layout_toRightOf="@+id/txtViewY"
+            android:layout_toEndOf="@id/txtViewY"
+            android:text="@string/testNum"
+            style="@style/std_text"
+            android:gravity="end"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/txtViewZ"
+            android:layout_below="@+id/txtViewY"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:text="@string/zAxis"
+            style="@style/std_text"
+            android:gravity="end"/>
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/txtViewZVal"
+            android:layout_below="@+id/txtViewYVal"
+            android:layout_toRightOf="@+id/txtViewZ"
+            android:layout_toEndOf="@id/txtViewZ"
+            android:text="@string/testNum"
+            style="@style/std_text"
+            android:gravity="end"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/txtViewAbs"
+            android:layout_below="@+id/txtViewZVal"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:text="@string/absVal"
+            style="@style/std_text"/>
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/txtViewAbsVal"
+            android:layout_below="@+id/txtViewZVal"
+            android:layout_toRightOf="@id/txtViewAbs"
+            android:layout_toEndOf="@id/txtViewAbs"
+            android:text="@string/testNum"
+            style="@style/std_text"
+            android:gravity="end"/>
+
+    </RelativeLayout>
+
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/flightLayout"
+        android:layout_below="@+id/infoLayout"
+        android:layout_marginTop="@dimen/std_padding"
+        android:layout_marginBottom="@dimen/std_padding"
+        android:padding="@dimen/std_padding"
+        android:background="@color/blue">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/txtViewFlightCount"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:text="@string/flightCount"
+            style="@style/std_text" />
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/txtViewFlightCountVal"
+            android:layout_toRightOf="@+id/txtViewFlightCount"
+            android:layout_toEndOf="@id/txtViewFlightCount"
+            android:text="@string/testNum"
+            style="@style/std_text"
+            android:gravity="end"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/txtViewFlightHeight"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/txtViewFlightCount"
+            android:text="@string/flightHeight"
+            style="@style/std_text" />
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/txtViewFlightHeightVal"
+            android:layout_toRightOf="@+id/txtViewFlightHeight"
+            android:layout_toEndOf="@id/txtViewFlightHeight"
+            android:layout_below="@+id/txtViewFlightCount"
+            android:text="@string/testNum"
+            style="@style/std_text"
+            android:gravity="end"/>
+
+    </RelativeLayout>
+
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/buttonLayout"
+        android:layout_below="@+id/flightLayout"
+        android:layout_marginTop="@dimen/std_padding"
+        android:layout_marginBottom="@dimen/std_padding">
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/firstRowLayout">
+
+            <Button
+                android:layout_width="100sp"
+                android:layout_height="50sp"
+                android:text="@string/btnStart"
+                android:id="@+id/btnStartStop"
+                android:layout_marginEnd="@dimen/small_margin"
+                android:layout_marginRight="@dimen/small_margin"
+                android:layout_marginBottom="@dimen/small_margin"
+                android:layout_weight="0.5"
+                android:onClick="btnStartStop"
+                style="@style/btnBlock2"/>
+
+            <Button
+                android:layout_width="100sp"
+                android:layout_height="50sp"
+                android:text="@string/btnDrawGraph"
+                android:id="@+id/btnDrawGraph"
+                android:layout_marginStart="@dimen/small_margin"
+                android:layout_marginLeft="@dimen/small_margin"
+                android:layout_marginBottom="@dimen/small_margin"
+                android:layout_weight="0.5"
+                android:onClick="btnDrawGraph"
+                style="@style/btnBlock2"/>
+
+        </LinearLayout>
+
+        <Button
+            android:layout_width="fill_parent"
+            android:layout_height="50sp"
+            android:text="@string/btnSave"
+            android:id="@+id/btnSaveData"
+            android:layout_marginTop="@dimen/small_margin"
+            android:layout_marginBottom="@dimen/small_margin"
+            android:layout_below="@+id/firstRowLayout"
+            android:onClick="btnSaveData"
+            style="@style/btnBlock2"/>
+
+
+        <Button
+            android:layout_width="fill_parent"
+            android:layout_height="50sp"
+            android:text="@string/btnShowInfo"
+            android:id="@+id/btnShowInfo"
+            android:layout_marginTop="@dimen/small_margin"
+            android:layout_below="@+id/btnSaveData"
+            android:onClick="btnShowInfo"
+            style="@style/btnBlock2"/>
+
+
+    </RelativeLayout>
+
+
+
+</RelativeLayout>
