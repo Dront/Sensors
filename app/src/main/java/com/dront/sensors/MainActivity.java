@@ -112,11 +112,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        double[] newVal = new double[3];
-        for (int  i = 0; i < 3; i++){
-            newVal[i] = (double) event.values[i];
-        }
-        accInfo.smallTick(newVal);
+        accInfo.smallTick(event.values);
     }
 
     public void btnStartStop(View v){

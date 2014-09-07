@@ -7,9 +7,7 @@ import android.util.Log;
 import java.util.ArrayList;
 
 public class AccInfo {
-    //dem fields
     //do not ask me why
-
     public static final int DEFAULT_BIG_TIC_DELAY = 200;
     private static final int DEFAULT_SENSOR_DELAY = SensorManager.SENSOR_DELAY_FASTEST;
     private static final int DEFAULT_ARR_SIZE = 500;
@@ -18,9 +16,9 @@ public class AccInfo {
 
     private  static volatile AccInfo instance;
 
-    private Double curX, curY, curZ;
-    private Double sumX, sumY, sumZ;
-    private Double meanX, meanY, meanZ, meanAbs;
+    private Float curX, curY, curZ;
+    private Float sumX, sumY, sumZ;
+    private Float meanX, meanY, meanZ, meanAbs;
     private ArrayList<AccRecord> data;
     private Integer counter;
     private Integer delay;
@@ -39,14 +37,14 @@ public class AccInfo {
         flightGravityMax = DEFAULT_FLIGHT_GRAVITY;
         enabled = false;
         zeroValues();
-        meanX = meanY = meanZ = meanAbs = 0.0;
+        meanX = meanY = meanZ = meanAbs = 0.0f;
         data = new ArrayList<AccRecord>(DEFAULT_ARR_SIZE);
     }
 
     //private methods
     private void zeroValues(){
-        sumX = sumY = sumZ = 0.0;
-        curX = curY = curZ = 0.0;
+        sumX = sumY = sumZ = 0.0f;
+        curX = curY = curZ = 0.0f;
         counter = 0;
     }
 
@@ -55,7 +53,7 @@ public class AccInfo {
 
         FlightInterval tmpInterval = new FlightInterval();
         for(AccRecord cur: data){
-            if (cur.meanVal > flightGravityMax){
+            if (cur.getMean() > flightGravityMax){
                 if (tmpInterval.start != 0){
                     double time = ((double)tmpInterval.end - tmpInterval.start) / 1000;
                     if (time > MIN_FLIGHT_TIME){
@@ -67,10 +65,10 @@ public class AccInfo {
             }
 
             if (tmpInterval.start == 0){
-                tmpInterval.start = cur.time;
-                tmpInterval.end = cur.time;
+                tmpInterval.start = cur.getTime();
+                tmpInterval.end = cur.getTime();
             } else {
-                tmpInterval.end = cur.time;
+                tmpInterval.end = cur.getTime();
             }
         }
 
@@ -115,21 +113,21 @@ public class AccInfo {
         return instance;
     }
 
-    public void smallTick(double[] newVal){
+    public void smallTick(float[] newVal){
         if (data.size() != 0){
-            double[] curVal = {curX, curY, curZ};
+            float[] curVal = {curX, curY, curZ};
             MovingFilter accFilter = new MovingFilter(MovingFilter.FilterType.LOW_PASS_MOD_1);
             curVal = accFilter.filter(curVal, newVal);
             curX = curVal[0];
             curY = curVal[1];
             curZ = curVal[2];
         } else {
-            curX = (double)newVal[0];
-            curY = (double)newVal[1];
-            curZ = (double)newVal[2];
+            curX = newVal[0];
+            curY = newVal[1];
+            curZ = newVal[2];
         }
 
-        double mean = Math.sqrt(curX*curX + curY*curY + curZ*curZ);
+        float mean = (float) Math.sqrt(curX*curX + curY*curY + curZ*curZ);
         data.add(new AccRecord(curX, curY, curZ, mean));
 
         sumX += curX;
@@ -145,9 +143,9 @@ public class AccInfo {
         meanX = sumX / counter;
         meanY = sumY / counter;
         meanZ = sumZ / counter;
-        meanAbs = Math.sqrt(meanX*meanX + meanY*meanY + meanZ*meanZ);
+        meanAbs = (float)Math.sqrt(meanX*meanX + meanY*meanY + meanZ*meanZ);
         counter = 0;
-        sumX = sumY = sumZ = 0.0;
+        sumX = sumY = sumZ = 0.0f;
         //data.add(new AccRecord(meanX, meanY, meanZ, meanAbs));
         //zeroValues();
     }
@@ -168,19 +166,19 @@ public class AccInfo {
     }
 
     //getters
-    public Double getMeanAbs() {
+    public Float getMeanAbs() {
         return meanAbs;
     }
 
-    public Double getMeanX() {
+    public Float getMeanX() {
         return meanX;
     }
 
-    public Double getMeanY() {
+    public Float getMeanY() {
         return meanY;
     }
 
-    public Double getMeanZ() {
+    public Float getMeanZ() {
         return meanZ;
     }
 

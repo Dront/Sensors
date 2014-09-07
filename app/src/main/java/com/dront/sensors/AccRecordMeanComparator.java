@@ -5,6 +5,6 @@ import java.util.Comparator;
 public class AccRecordMeanComparator  implements Comparator<AccRecord> {
     @Override
     public int compare(AccRecord accRecord1, AccRecord accRecord2) {
-        return (int)Math.ceil(accRecord1.meanVal - accRecord2.meanVal);
+        return (int)Math.ceil(accRecord1.getMean() - accRecord2.getMean());
     }
 }

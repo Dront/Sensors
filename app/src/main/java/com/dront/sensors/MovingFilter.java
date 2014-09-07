@@ -1,11 +1,9 @@
 package com.dront.sensors;
 
-import java.util.ArrayList;
-
 public class MovingFilter {
-    private static final double FILTER_ALPHA = 0.90;
-    private static final double FILTER_DELTA_HIGH = 4.0;
-    private static final double FILTER_DELTA_LOW = 1.0;
+    private static final float FILTER_ALPHA = 0.90f;
+    private static final float FILTER_DELTA_HIGH = 4.0f;
+    private static final float FILTER_DELTA_LOW = 1.0f;
 
     private FilterType type;
 
@@ -21,7 +19,7 @@ public class MovingFilter {
         type = t;
     }
 
-    public double[] filter(double[] cur, double[] next){
+    public float[] filter(float[] cur, float[] next){
         switch (type){
             case LOW_PASS:
                 return lowPass(cur, next);
@@ -34,18 +32,18 @@ public class MovingFilter {
         }
     }
 
-    private double[] lowPass(double[] cur, double[] next){
-        double[] result = new double[3];
+    private float[] lowPass(float[] cur, float[] next){
+        float[] result = new float[3];
         for (int i = 0; i < 3; i++){
             result[i] = FILTER_ALPHA * cur[i] + (1 - FILTER_ALPHA) * next[i];
         }
         return result;
     }
 
-    private double[] filterLowPassMod1(double[] cur, double[] next){
-        double[] result = new double[3];
+    private float[] filterLowPassMod1(float[] cur, float[] next){
+        float[] result = new float[3];
         for (int i = 0; i < 3; i++){
-            double delta = Math.abs(cur[i] - next[i]);
+            float delta = Math.abs(cur[i] - next[i]);
             if (delta < FILTER_DELTA_HIGH){
                 result[i] = FILTER_ALPHA * cur[i] + (1 - FILTER_ALPHA) * next[i];
             } else {
@@ -55,10 +53,10 @@ public class MovingFilter {
         return result;
     }
 
-    private double[] filterLowPassMod2(double[] cur, double[] next){
-        double[] result = new double[3];
+    private float[] filterLowPassMod2(float[] cur, float[] next){
+        float[] result = new float[3];
         for (int i = 0; i < 3; i++){
-            double delta = Math.abs(cur[i] - next[i]);
+            float delta = Math.abs(cur[i] - next[i]);
             if ( delta > FILTER_DELTA_LOW && delta < FILTER_DELTA_HIGH){
                 result[i] = FILTER_ALPHA * cur[i] + (1 - FILTER_ALPHA) * next[i];
             } else if (delta < FILTER_DELTA_LOW){
