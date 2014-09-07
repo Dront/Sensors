@@ -15,7 +15,7 @@ public class AccInfo {
 
     private  static volatile AccInfo instance;
 
-    private Float curX, curY, curZ, curAbs;
+    private AccRecord curRecord;
     private ArrayList<AccRecord> data;
     private Integer delay;
     private boolean enabled;
@@ -30,13 +30,13 @@ public class AccInfo {
         resolution = (double)s.getResolution();
         flightGravityMax = DEFAULT_FLIGHT_GRAVITY;
         enabled = false;
-        zeroValues();
+        curRecord = new AccRecord();
         data = new ArrayList<AccRecord>(DEFAULT_ARR_SIZE);
     }
 
     //private methods
     private void zeroValues(){
-        curX = curY = curZ = curAbs = 0.0f;
+        curRecord = new AccRecord();
     }
 
     private ArrayList<Double> findFlightIntervals(){
@@ -106,21 +106,13 @@ public class AccInfo {
 
     public void smallTick(float[] newVal){
         if (data.size() != 0){
-            float[] curVal = {curX, curY, curZ};
             MovingFilter accFilter = new MovingFilter(MovingFilter.FilterType.LOW_PASS_MOD_1);
-            curVal = accFilter.filter(curVal, newVal);
-            curX = curVal[0];
-            curY = curVal[1];
-            curZ = curVal[2];
+            curRecord = accFilter.filter(curRecord, new AccRecord(newVal));
         } else {
-            curX = newVal[0];
-            curY = newVal[1];
-            curZ = newVal[2];
+            curRecord = new AccRecord(newVal);
         }
 
-        float mean = (float) Math.sqrt(curX*curX + curY*curY + curZ*curZ);
-        curAbs = mean;
-        data.add(new AccRecord(curX, curY, curZ, mean));
+        data.add(curRecord);
     }
 
     public void enable() {
@@ -140,19 +132,19 @@ public class AccInfo {
 
     //getters
     public Float getLastAbs() {
-        return curAbs;
+        return curRecord.getAbs();
     }
 
     public Float getLastX() {
-        return curX;
+        return curRecord.getX();
     }
 
     public Float getLastY() {
-        return curY;
+        return curRecord.getY();
     }
 
     public Float getLastZ() {
-        return curZ;
+        return curRecord.getZ();
     }
 
     public Integer getDelay() {

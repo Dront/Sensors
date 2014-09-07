@@ -2,31 +2,56 @@ package com.dront.sensors;
 
 public class AccRecord {
     private long time;
-    private float[] values;
+    public float[] values;
 
     //constructors
-    public AccRecord(float x, float y, float z, float abs, long t){
+    public AccRecord(float x, float y, float z, long t){
         time = t;
         values = new float[4];
         values[0] = x;
         values[1] = y;
         values[2] = z;
-        values[3] = abs;
-    }
-
-    public AccRecord(float x, float y, float z, float abs){
-        time = System.currentTimeMillis();
-        values = new float[4];
-        values[0] = x;
-        values[1] = y;
-        values[2] = z;
-        values[3] = abs;
+        countAbs();
     }
 
     public AccRecord(float[] data, long t){
         time = t;
         values = new float[4];
-        values = data;
+        copy3Elements(data);
+        countAbs();
+    }
+
+    public AccRecord(float x, float y, float z){
+        time = System.currentTimeMillis();
+        values = new float[4];
+        values[0] = x;
+        values[1] = y;
+        values[2] = z;
+        countAbs();
+    }
+
+    public AccRecord(float[] data){
+        time = System.currentTimeMillis();
+        values = new float[4];
+        copy3Elements(data);
+        countAbs();
+    }
+
+    public AccRecord(){
+        time = System.currentTimeMillis();
+        values = new float[4];
+    }
+
+    //private methods
+    private void copy3Elements(float[] data){
+        values[0] = data[0];
+        values[1] = data[1];
+        values[2] = data[2];
+    }
+
+    //public methods
+    public void countAbs(){
+        values[3] = (float)Math.sqrt(values[0]*values[0] + values[1]*values[1] + values[2]*values[2]);
     }
 
     //getters
@@ -48,16 +73,6 @@ public class AccRecord {
 
     public long getTime(){
         return time;
-    }
-
-    //gets 4 values
-    public float[] getValues(){
-        return values;
-    }
-
-    //gets 3 values
-    public float[] getCoords(){
-        return new float[]{values[0], values[1], values[2]};
     }
 
     //stuff for parcelable

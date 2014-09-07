@@ -19,7 +19,7 @@ public class MovingFilter {
         type = t;
     }
 
-    public float[] filter(float[] cur, float[] next){
+    public AccRecord filter(AccRecord cur, AccRecord next){
         switch (type){
             case LOW_PASS:
                 return lowPass(cur, next);
@@ -32,40 +32,43 @@ public class MovingFilter {
         }
     }
 
-    private float[] lowPass(float[] cur, float[] next){
-        float[] result = new float[3];
+    private AccRecord lowPass(AccRecord cur, AccRecord next){
+        AccRecord res = new AccRecord();
         for (int i = 0; i < 3; i++){
-            result[i] = FILTER_ALPHA * cur[i] + (1 - FILTER_ALPHA) * next[i];
+            res.values[i] = FILTER_ALPHA*cur.values[i] + (1 - FILTER_ALPHA)*next.values[i];
         }
-        return result;
+        res.countAbs();
+        return res;
     }
 
-    private float[] filterLowPassMod1(float[] cur, float[] next){
-        float[] result = new float[3];
+    private AccRecord filterLowPassMod1(AccRecord cur, AccRecord next){
+        AccRecord res = new AccRecord();
         for (int i = 0; i < 3; i++){
-            float delta = Math.abs(cur[i] - next[i]);
+            float delta = Math.abs(cur.values[i] - next.values[i]);
             if (delta < FILTER_DELTA_HIGH){
-                result[i] = FILTER_ALPHA * cur[i] + (1 - FILTER_ALPHA) * next[i];
+                res.values[i] = FILTER_ALPHA*cur.values[i] + (1 - FILTER_ALPHA)*next.values[i];
             } else {
-                result[i] = next[i];
+                res.values[i] = next.values[i];
             }
         }
-        return result;
+        res.countAbs();
+        return res;
     }
 
-    private float[] filterLowPassMod2(float[] cur, float[] next){
-        float[] result = new float[3];
+    private AccRecord filterLowPassMod2(AccRecord cur, AccRecord next){
+        AccRecord res = new AccRecord();
         for (int i = 0; i < 3; i++){
-            float delta = Math.abs(cur[i] - next[i]);
+            float delta = Math.abs(cur.values[i] - next.values[i]);
             if ( delta > FILTER_DELTA_LOW && delta < FILTER_DELTA_HIGH){
-                result[i] = FILTER_ALPHA * cur[i] + (1 - FILTER_ALPHA) * next[i];
+                res.values[i] = FILTER_ALPHA*cur.values[i] + (1 - FILTER_ALPHA)*next.values[i];
             } else if (delta < FILTER_DELTA_LOW){
-                result[i] = cur[i];
+                res.values[i] = cur.values[i];
             } else if (delta > FILTER_DELTA_HIGH){
-                result[i] = next[i];
+                res.values[i] = next.values[i];
             }
         }
-        return result;
+        res.countAbs();
+        return res;
     }
 
     public FilterType getType(){
