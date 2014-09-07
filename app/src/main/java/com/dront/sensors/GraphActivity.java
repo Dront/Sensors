@@ -54,6 +54,12 @@ public class GraphActivity extends Activity {
         linLayout.addView(gv);
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        data.clear();
+    }
+
     private GraphView.GraphViewData[] getGVData(){
         int size = data.size();
         Long minTime = data.get(0).getTime();
