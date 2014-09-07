@@ -26,7 +26,6 @@ public class AccInfo implements SensorEventListener {
     private Double resolution;
     private Double flightGravityMax;
 
-    //private because it's a singleton
     public AccInfo(SensorManager s){
         manager = s;
         sensor = manager.getDefaultSensor(Constants.DEFAULT_SENSOR);
