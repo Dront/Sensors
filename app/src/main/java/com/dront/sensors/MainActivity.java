@@ -4,6 +4,10 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -19,17 +23,19 @@ import java.util.ArrayList;
 import util.ArrayOperation;
 
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements SensorEventListener {
 
-    public static final int DEFAULT_UI_UPDATE_DELAY = 100;
+    private final static String BIG_TICK_PREF = "big tick";
+    private final static int DEFAULT_SENSOR = Sensor.TYPE_ACCELEROMETER;
 
     //some fields
     private TextView txtViewXAxisVal, txtViewYAxisVal, txtViewZAxisVal, txtViewAbsVal;
     private TextView txtViewFlightCount, txtViewFlightHeight;
     private Button btnStartStop;
 
+    private SensorManager mSensorManager;
+    private Sensor accSensor;
     private AccInfo accInfo;
-    DataTransport transport;
     private RecordsWriter recordsWriter;
 
     private Handler h;
@@ -39,30 +45,38 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         //magic of the Creation
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
         Log.d(Constants.LOG_TAG, "MainActivity onCreate");
 
+        setContentView(R.layout.activity_main);
         getInterfaceResources();
 
-        SensorManager mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        if (mSensorManager.getDefaultSensor(Constants.DEFAULT_SENSOR) == null){
+        h = new Handler();
+
+        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        if (mSensorManager.getDefaultSensor(DEFAULT_SENSOR) == null){
             finish();
             return;
         }
-        accInfo = new AccInfo(mSensorManager);
 
-        h = new Handler();
+        accSensor = mSensorManager.getDefaultSensor(DEFAULT_SENSOR);
+        accInfo = AccInfo.getInstance(accSensor);
+        mSensorManager.unregisterListener(this);
+
+        loadSettings();
+
         r = new Runnable() {
             @Override
             public void run() {
-                DecimalFormat df = new DecimalFormat("#.##");
-                txtViewAbsVal.setText(df.format(accInfo.getLastAbs()));
-                txtViewXAxisVal.setText(df.format(accInfo.getLastX()));
-                txtViewYAxisVal.setText(df.format(accInfo.getLastY()));
-                txtViewZAxisVal.setText(df.format(accInfo.getLastZ()));
+                accInfo.bigTick();
 
-                h.postDelayed(this, DEFAULT_UI_UPDATE_DELAY);
+                DecimalFormat df = new DecimalFormat("#.##");
+                txtViewAbsVal.setText(df.format(accInfo.getMeanAbs()));
+                txtViewXAxisVal.setText(df.format(accInfo.getMeanX()));
+                txtViewYAxisVal.setText(df.format(accInfo.getMeanY()));
+                txtViewZAxisVal.setText(df.format(accInfo.getMeanZ()));
+
+                h.postDelayed(this, accInfo.getBigTickDelay());
             }
         };
     }
@@ -71,10 +85,6 @@ public class MainActivity extends Activity {
     protected void onResume() {
         //guess
         super.onResume();
-        if (transport != null){
-            transport.clear();
-        }
-
         Log.d(Constants.LOG_TAG, "MainActivity onResume");
     }
 
@@ -83,6 +93,7 @@ public class MainActivity extends Activity {
         //guess
         super.onPause();
         Log.d(Constants.LOG_TAG, "MainActivity onPause");
+        saveSettings();
         disableSensor();
     }
 
@@ -92,6 +103,20 @@ public class MainActivity extends Activity {
         if (recordsWriter != null){
             recordsWriter.cancel(true);
         }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int i) {
+        //stuff
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        double[] newVal = new double[3];
+        for (int  i = 0; i < 3; i++){
+            newVal[i] = (double) event.values[i];
+        }
+        accInfo.smallTick(newVal);
     }
 
     public void btnStartStop(View v){
@@ -109,9 +134,7 @@ public class MainActivity extends Activity {
             Toast.makeText(getApplicationContext(), "Record data first.", Toast.LENGTH_SHORT).show();
         } else {
             disableSensor();
-
-            transport = DataTransport.getInstance();
-            transport.addAll(accInfo.getData());
+            //StorageUser.writeRecordList(accInfo.getData());
 
             Intent intent = new Intent(this, GraphActivity.class);
             startActivity(intent);
@@ -175,13 +198,15 @@ public class MainActivity extends Activity {
     private void disableSensor(){
         btnStartStop.setText(R.string.btnStart);
         accInfo.disable();
+        mSensorManager.unregisterListener(this);
         h.removeCallbacks(r);
     }
 
     private void enableSensor(){
         btnStartStop.setText(R.string.btnPause);
         accInfo.enable();
-        h.postDelayed(r, DEFAULT_UI_UPDATE_DELAY);
+        mSensorManager.registerListener(this, accSensor, accInfo.getDelay());
+        h.postDelayed(r, accInfo.getBigTickDelay());
     }
 
     private void getInterfaceResources(){
@@ -194,6 +219,23 @@ public class MainActivity extends Activity {
         txtViewFlightHeight = (TextView) findViewById(R.id.txtViewFlightHeightVal);
 
         btnStartStop = (Button) findViewById(R.id.btnStartStop);
+    }
+
+    private void loadSettings(){
+        Context context = getApplicationContext();
+        String filename = getString(R.string.settingsPref);
+        SharedPreferences settings = context.getSharedPreferences(filename, Context.MODE_PRIVATE);
+        int bigTickTime = settings.getInt(BIG_TICK_PREF, AccInfo.DEFAULT_BIG_TIC_DELAY);
+        accInfo.setBigTickDelay(bigTickTime);
+    }
+
+    private void saveSettings(){
+        Context context = getApplicationContext();
+        String filename = getString(R.string.settingsPref);
+        SharedPreferences settings = context.getSharedPreferences(filename, Context.MODE_PRIVATE);
+        SharedPreferences.Editor optionsEditor = settings.edit();
+        optionsEditor.putInt(BIG_TICK_PREF, accInfo.getBigTickDelay());
+        optionsEditor.apply();
     }
 
 }

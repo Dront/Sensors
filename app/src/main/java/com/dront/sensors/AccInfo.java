@@ -1,47 +1,53 @@
 package com.dront.sensors;
 
 import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.util.Log;
 
 import java.util.ArrayList;
 
-public class AccInfo implements SensorEventListener {
+public class AccInfo {
+    //dem fields
+    //do not ask me why
 
-
+    public static final int DEFAULT_BIG_TIC_DELAY = 200;
     private static final int DEFAULT_SENSOR_DELAY = SensorManager.SENSOR_DELAY_FASTEST;
     private static final int DEFAULT_ARR_SIZE = 500;
     private static final double DEFAULT_FLIGHT_GRAVITY = 5.0;
     private static final double MIN_FLIGHT_TIME = 0.2;
 
-    private SensorManager manager;
-    private Sensor sensor;
+    private  static volatile AccInfo instance;
 
-    private AccRecord curRecord;
+    private Double curX, curY, curZ;
+    private Double sumX, sumY, sumZ;
+    private Double meanX, meanY, meanZ, meanAbs;
     private ArrayList<AccRecord> data;
+    private Integer counter;
     private Integer delay;
     private boolean enabled;
     private String info;
     private Double resolution;
     private Double flightGravityMax;
+    private Integer bigTickDelay;
 
-    public AccInfo(SensorManager s){
-        manager = s;
-        sensor = manager.getDefaultSensor(Constants.DEFAULT_SENSOR);
-        manager.unregisterListener(this);
+    //private because it's a singleton
+    private AccInfo(Sensor s){
         delay = DEFAULT_SENSOR_DELAY;
-        info = sensor.toString();
-        resolution = (double)sensor.getResolution();
+        bigTickDelay = DEFAULT_BIG_TIC_DELAY;
+        info = s.toString();
+        resolution = (double)s.getResolution();
         flightGravityMax = DEFAULT_FLIGHT_GRAVITY;
         enabled = false;
-        curRecord = new AccRecord();
+        zeroValues();
+        meanX = meanY = meanZ = meanAbs = 0.0;
         data = new ArrayList<AccRecord>(DEFAULT_ARR_SIZE);
     }
 
     //private methods
     private void zeroValues(){
-        curRecord = new AccRecord();
+        sumX = sumY = sumZ = 0.0;
+        curX = curY = curZ = 0.0;
+        counter = 0;
     }
 
     private ArrayList<Double> findFlightIntervals(){
@@ -49,7 +55,7 @@ public class AccInfo implements SensorEventListener {
 
         FlightInterval tmpInterval = new FlightInterval();
         for(AccRecord cur: data){
-            if (cur.getAbs() > flightGravityMax){
+            if (cur.meanVal > flightGravityMax){
                 if (tmpInterval.start != 0){
                     double time = ((double)tmpInterval.end - tmpInterval.start) / 1000;
                     if (time > MIN_FLIGHT_TIME){
@@ -61,10 +67,10 @@ public class AccInfo implements SensorEventListener {
             }
 
             if (tmpInterval.start == 0){
-                tmpInterval.start = cur.getTime();
-                tmpInterval.end = cur.getTime();
+                tmpInterval.start = cur.time;
+                tmpInterval.end = cur.time;
             } else {
-                tmpInterval.end = cur.getTime();
+                tmpInterval.end = cur.time;
             }
         }
 
@@ -82,16 +88,6 @@ public class AccInfo implements SensorEventListener {
         return res;
     }
 
-    private void smallTick(float[] newVal){
-        if (data.size() != 0){
-            MovingFilter accFilter = new MovingFilter(MovingFilter.FilterType.LOW_PASS_MOD_1);
-            curRecord = accFilter.filter(curRecord, new AccRecord(newVal));
-        } else {
-            curRecord = new AccRecord(newVal);
-        }
-        data.add(curRecord);
-    }
-
     public double[] getFlights(){
         ArrayList<Double> intervals = findFlightIntervals();
 
@@ -101,16 +97,69 @@ public class AccInfo implements SensorEventListener {
         return countHeights(intervals);
     }
 
+    //public methods
+    public static AccInfo getInstance(Sensor s){
+        if (instance == null ){
+            synchronized (AccInfo.class){
+                if (instance == null){
+                    instance = new AccInfo(s);
+                    Log.d(Constants.LOG_SINGLETON, "create singleton");
+                }
+            }
+        }
+        return instance;
+    }
+
+    public static AccInfo getInstance(){
+        Log.d(Constants.LOG_SINGLETON, "return singleton");
+        return instance;
+    }
+
+    public void smallTick(double[] newVal){
+        if (data.size() != 0){
+            double[] curVal = {curX, curY, curZ};
+            MovingFilter accFilter = new MovingFilter(MovingFilter.FilterType.LOW_PASS_MOD_1);
+            curVal = accFilter.filter(curVal, newVal);
+            curX = curVal[0];
+            curY = curVal[1];
+            curZ = curVal[2];
+        } else {
+            curX = (double)newVal[0];
+            curY = (double)newVal[1];
+            curZ = (double)newVal[2];
+        }
+
+        double mean = Math.sqrt(curX*curX + curY*curY + curZ*curZ);
+        data.add(new AccRecord(curX, curY, curZ, mean));
+
+        sumX += curX;
+        sumY += curY;
+        sumZ += curZ;
+        counter++;
+    }
+
+    public void bigTick(){
+        if (counter == 0){
+            return;
+        }
+        meanX = sumX / counter;
+        meanY = sumY / counter;
+        meanZ = sumZ / counter;
+        meanAbs = Math.sqrt(meanX*meanX + meanY*meanY + meanZ*meanZ);
+        counter = 0;
+        sumX = sumY = sumZ = 0.0;
+        //data.add(new AccRecord(meanX, meanY, meanZ, meanAbs));
+        //zeroValues();
+    }
+
     public void enable() {
         zeroValues();
         data.clear();
-        manager.registerListener(this, sensor, delay);
         this.enabled = true;
     }
 
     public void disable(){
         data.trimToSize();
-        manager.unregisterListener(this);
         this.enabled = false;
     }
 
@@ -119,20 +168,20 @@ public class AccInfo implements SensorEventListener {
     }
 
     //getters
-    public Float getLastAbs() {
-        return curRecord.getAbs();
+    public Double getMeanAbs() {
+        return meanAbs;
     }
 
-    public Float getLastX() {
-        return curRecord.getX();
+    public Double getMeanX() {
+        return meanX;
     }
 
-    public Float getLastY() {
-        return curRecord.getY();
+    public Double getMeanY() {
+        return meanY;
     }
 
-    public Float getLastZ() {
-        return curRecord.getZ();
+    public Double getMeanZ() {
+        return meanZ;
     }
 
     public Integer getDelay() {
@@ -145,6 +194,14 @@ public class AccInfo implements SensorEventListener {
 
     public Boolean getEnabled() {
         return enabled;
+    }
+
+    public Integer getCounter() {
+        return counter;
+    }
+
+    public Integer getBigTickDelay() {
+        return bigTickDelay;
     }
 
     public ArrayList<AccRecord> getData(){
@@ -160,13 +217,7 @@ public class AccInfo implements SensorEventListener {
         this.delay = delay;
     }
 
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        smallTick(event.values);
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int i) {
-
+    public void setBigTickDelay(Integer bigTickDelay) {
+        this.bigTickDelay = bigTickDelay;
     }
 }
