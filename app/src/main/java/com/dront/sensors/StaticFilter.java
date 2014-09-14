@@ -54,9 +54,4 @@ public class StaticFilter {
     public FilterType getType() {
         return type;
     }
-
-    //setters
-    public void setType(FilterType type) {
-        this.type = type;
-    }
 }

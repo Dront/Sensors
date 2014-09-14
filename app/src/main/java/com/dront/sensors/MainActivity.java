@@ -29,6 +29,7 @@ public class MainActivity extends Activity {
     private Button btnStartStop;
 
     private AccInfo accInfo;
+    DataTransport transport;
     private RecordsWriter recordsWriter;
 
     private Handler h;
@@ -70,6 +71,10 @@ public class MainActivity extends Activity {
     protected void onResume() {
         //guess
         super.onResume();
+        if (transport != null){
+            transport.clear();
+        }
+
         Log.d(Constants.LOG_TAG, "MainActivity onResume");
     }
 
@@ -105,7 +110,7 @@ public class MainActivity extends Activity {
         } else {
             disableSensor();
 
-            DataTransport transport = DataTransport.getInstance();
+            transport = DataTransport.getInstance();
             transport.addAll(accInfo.getData());
 
             Intent intent = new Intent(this, GraphActivity.class);
