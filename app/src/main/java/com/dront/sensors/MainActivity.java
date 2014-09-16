@@ -9,30 +9,28 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
-import util.ArrayOperation;
-
 
 public class MainActivity extends Activity {
 
-    public static final int DEFAULT_UI_UPDATE_DELAY = 100;
+    public static final int UI_UPDATE_DELAY = 100;
+    public static final int FLIGHT_CHECK_DELAY = 2000;
 
-    //some fields
     private TextView txtViewXAxisVal, txtViewYAxisVal, txtViewZAxisVal, txtViewAbsVal;
     private TextView txtViewFlightCount, txtViewFlightHeight;
-    private Button btnStartStop;
 
     private AccInfo accInfo;
     private RecordsWriter recordsWriter;
+    private FlightAnalyzer flightAnalyzer;
 
     private Handler h;
-    private Runnable r;
+    private Runnable sensorDataUpdate;
+    private Runnable flightUpdate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,7 +50,7 @@ public class MainActivity extends Activity {
         accInfo = new AccInfo(mSensorManager);
 
         h = new Handler();
-        r = new Runnable() {
+        sensorDataUpdate = new Runnable() {
             @Override
             public void run() {
                 DecimalFormat df = new DecimalFormat("#.##");
@@ -60,8 +58,26 @@ public class MainActivity extends Activity {
                 txtViewXAxisVal.setText(df.format(accInfo.getLastX()));
                 txtViewYAxisVal.setText(df.format(accInfo.getLastY()));
                 txtViewZAxisVal.setText(df.format(accInfo.getLastZ()));
+                txtViewFlightCount.setText(Integer.toString(FlightAnalyzer.getFlightCount()));
+                txtViewFlightHeight.setText(df.format(FlightAnalyzer.getLastHeight()));
 
-                h.postDelayed(this, DEFAULT_UI_UPDATE_DELAY);
+                h.postDelayed(this, UI_UPDATE_DELAY);
+            }
+        };
+
+        flightUpdate = new Runnable() {
+            @Override
+            public void run() {
+                if ((flightAnalyzer == null || flightAnalyzer.getStatus() == FlightAnalyzer.Status.FINISHED)
+                        && !accInfo.isDataEmpty()){
+                    flightAnalyzer = new FlightAnalyzer(accInfo.getData());
+                    flightAnalyzer.execute();
+                }
+
+                String msg = "Size of AccRecord array = " + accInfo.removeOldRecords();
+                Log.d(Constants.LOG_MEMORY, msg);
+
+                h.postDelayed(this, FLIGHT_CHECK_DELAY);
             }
         };
     }
@@ -73,6 +89,7 @@ public class MainActivity extends Activity {
         DataTransport transport = DataTransport.getInstance();
         transport.clear();
 
+        enableSensor();
         Log.d(Constants.LOG_TAG, "MainActivity onResume");
     }
 
@@ -89,16 +106,6 @@ public class MainActivity extends Activity {
         super.onDestroy();
         if (recordsWriter != null){
             recordsWriter.cancel(true);
-        }
-    }
-
-    public void btnStartStop(View v){
-        //btnStartStop onClick
-        if (!accInfo.getEnabled()){
-            enableSensor();
-        } else {
-            flightCheck();
-            disableSensor();
         }
     }
 
@@ -149,38 +156,38 @@ public class MainActivity extends Activity {
         Toast.makeText(getApplicationContext(), info, Toast.LENGTH_LONG).show();
     }
 
-    private String flightCheck(){
-        double[] heights = accInfo.getFlights();
-        String msg;
-        if (heights == null){
-            msg = "Phone was not thrown";
-            txtViewFlightCount.setText("0");
-            txtViewFlightHeight.setText("");
-        } else {
-            msg = "Count: " + heights.length + "\n";
-            txtViewFlightCount.setText(String.valueOf(heights.length));
-
-            for (int i = 0; i < heights.length; i++){
-                msg += "Flight " + (i + 1) + ". Height: " + heights[i] + " meters.\n";
-            }
-            double height = ArrayOperation.findMaxInArray(heights);
-            DecimalFormat df = new DecimalFormat("#.##");
-            txtViewFlightHeight.setText(df.format(height));
-        }
-        Log.d(Constants.LOG_FLIGHT, msg);
-        return msg;
-    }
+//    private String flightCheck(){
+//        double[] heights = accInfo.getFlights();
+//        String msg;
+//        if (heights == null || heights.length == 0){
+//            msg = "Phone was not thrown";
+//            txtViewFlightCount.setText("0");
+//            txtViewFlightHeight.setText("");
+//        } else {
+//            msg = "Count: " + heights.length + "\n";
+//            txtViewFlightCount.setText(String.valueOf(heights.length));
+//
+//            for (int i = 0; i < heights.length; i++){
+//                msg += "Flight " + (i + 1) + ". Height: " + heights[i] + " meters.\n";
+//            }
+//            double height = ArrayOperation.findMaxInArray(heights);
+//            DecimalFormat df = new DecimalFormat("#.##");
+//            txtViewFlightHeight.setText(df.format(height));
+//        }
+//        Log.d(Constants.LOG_FLIGHT, msg);
+//        return msg;
+//    }
 
     private void disableSensor(){
-        btnStartStop.setText(R.string.btnStart);
         accInfo.disable();
-        h.removeCallbacks(r);
+        h.removeCallbacks(sensorDataUpdate);
+        h.removeCallbacks(flightUpdate);
     }
 
     private void enableSensor(){
-        btnStartStop.setText(R.string.btnPause);
         accInfo.enable();
-        h.postDelayed(r, DEFAULT_UI_UPDATE_DELAY);
+        h.postDelayed(sensorDataUpdate, UI_UPDATE_DELAY);
+        h.postDelayed(flightUpdate, FLIGHT_CHECK_DELAY);
     }
 
     private void getInterfaceResources(){
@@ -191,8 +198,6 @@ public class MainActivity extends Activity {
 
         txtViewFlightCount = (TextView) findViewById(R.id.txtViewFlightCountVal);
         txtViewFlightHeight = (TextView) findViewById(R.id.txtViewFlightHeightVal);
-
-        btnStartStop = (Button) findViewById(R.id.btnStartStop);
     }
 
 }

@@ -11,9 +11,8 @@ public class AccInfo implements SensorEventListener {
 
 
     private static final int DEFAULT_SENSOR_DELAY = SensorManager.SENSOR_DELAY_FASTEST;
-    private static final int DEFAULT_ARR_SIZE = 500;
-    private static final double DEFAULT_FLIGHT_GRAVITY = 5.0;
-    private static final double MIN_FLIGHT_TIME = 0.2;
+    private static final int DEFAULT_ARR_SIZE = 2000;
+    private static final long MAX_TIME_INTERVAL = 30;
 
     private SensorManager manager;
     private Sensor sensor;
@@ -24,7 +23,6 @@ public class AccInfo implements SensorEventListener {
     private boolean enabled;
     private String info;
     private Double resolution;
-    private Double flightGravityMax;
 
     public AccInfo(SensorManager s){
         manager = s;
@@ -33,7 +31,6 @@ public class AccInfo implements SensorEventListener {
         delay = DEFAULT_SENSOR_DELAY;
         info = sensor.toString();
         resolution = (double)sensor.getResolution();
-        flightGravityMax = DEFAULT_FLIGHT_GRAVITY;
         enabled = false;
         curRecord = new AccRecord();
         data = new ArrayList<AccRecord>(DEFAULT_ARR_SIZE);
@@ -42,44 +39,6 @@ public class AccInfo implements SensorEventListener {
     //private methods
     private void zeroValues(){
         curRecord = new AccRecord();
-    }
-
-    private ArrayList<Double> findFlightIntervals(){
-        ArrayList<Double> res = new ArrayList<Double>();
-
-        FlightInterval tmpInterval = new FlightInterval();
-        for(AccRecord cur: data){
-            if (cur.getAbs() > flightGravityMax){
-                if (tmpInterval.start != 0){
-                    double time = ((double)tmpInterval.end - tmpInterval.start) / 1000;
-                    if (time > MIN_FLIGHT_TIME){
-                        res.add(time);
-                    }
-                    tmpInterval = new FlightInterval();
-                }
-                continue;
-            }
-
-            if (tmpInterval.start == 0){
-                tmpInterval.start = cur.getTime();
-                tmpInterval.end = cur.getTime();
-            } else {
-                tmpInterval.end = cur.getTime();
-            }
-        }
-
-        return res;
-    }
-
-    private double[] countHeights(ArrayList<Double> times){
-        double[] res = new double[times.size()];
-
-        for (int i = 0; i < times.size(); i++){
-            Double tmp = times.get(i) / 2;
-            res[i] = SensorManager.GRAVITY_EARTH * tmp * tmp / 2;
-        }
-
-        return res;
     }
 
     private void smallTick(float[] newVal){
@@ -92,15 +51,7 @@ public class AccInfo implements SensorEventListener {
         data.add(curRecord);
     }
 
-    public double[] getFlights(){
-        ArrayList<Double> intervals = findFlightIntervals();
-
-        if (intervals.isEmpty()){
-            return null;
-        }
-        return countHeights(intervals);
-    }
-
+    //public methods
     public void enable() {
         zeroValues();
         data.clear();
@@ -112,6 +63,19 @@ public class AccInfo implements SensorEventListener {
         data.trimToSize();
         manager.unregisterListener(this);
         this.enabled = false;
+    }
+
+    public int removeOldRecords(){
+        int size = data.size();
+        long timeInterval = (data.get(size - 1).getTime() - data.get(0).getTime()) / 1000;
+        if (timeInterval > MAX_TIME_INTERVAL){
+            ArrayList<AccRecord> tmp = new ArrayList<AccRecord>(DEFAULT_ARR_SIZE);
+            for (int i = size / 2; i < size; i++){
+                tmp.add(data.get(i));
+            }
+            data = tmp;
+        }
+        return data.size();
     }
 
     public boolean isDataEmpty(){
